@@ -45,7 +45,8 @@ APP_CONFIG = {
         APP_CONFIG_TYPE.DATA : [            
             ("Type", DATA_TYPE.QUESTION_TYPE),
             ("Title", DATA_TYPE.QUESTION),
-            ("Correct", DATA_TYPE.CORRECT_ANSWER),
+            ("Correct", DATA_TYPE.CORRECT_ANSWER_INDEX),
+            ("Choice", DATA_TYPE.WRONG_ANSWERS), # we need to merge correct and wrong answers 
             ("Choice", DATA_TYPE.WRONG_ANSWERS),
             ("Choice", DATA_TYPE.WRONG_ANSWERS),
             ("Choice", DATA_TYPE.WRONG_ANSWERS),
@@ -132,14 +133,25 @@ def genQuestions(data, nQ):
                 q = filtered_questions
             else:
                 q = questions
-            print(q)
+            # print(q)
             for question in q:
                 wrong_answers = copy.deepcopy(question[DATA_TYPE.WRONG_ANSWERS])
                 row = []
                 for p in config[APP_CONFIG_TYPE.DATA]:
                     if type(p[1]) == DATA_TYPE:
-                        if p[1] == DATA_TYPE.WRONG_ANSWERS:
-                            wrong_answer = random.choice(wrong_answers)
+                        if p[1] == DATA_TYPE.CORRECT_ANSWER_INDEX:
+                            # only wookclap
+                            correctAnswerIndex = random.randint(1, len(wrong_answers))
+                            row.append(correctAnswerIndex)
+                            wrong_answers.insert(
+                                correctAnswerIndex-1,
+                                question[DATA_TYPE.CORRECT_ANSWER]
+                            )
+                        elif p[1] == DATA_TYPE.WRONG_ANSWERS:
+                            if app == APP.WOOCLAP:
+                                wrong_answer = wrong_answers[0]
+                            else:
+                                wrong_answer = random.choice(wrong_answers)
                             row.append(wrong_answer)
                             wrong_answers.remove(wrong_answer)
                         else:
@@ -147,7 +159,7 @@ def genQuestions(data, nQ):
                     else:
                         row.append(p[1])
                 output[subject][app].append(row)
-
+            random.shuffle(output[subject][app])
     return output
     
 def genFiles(output):
